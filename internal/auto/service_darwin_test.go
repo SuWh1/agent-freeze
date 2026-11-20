@@ -3,6 +3,7 @@ package auto
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -78,5 +79,15 @@ func TestInstallRetriesABootstrapThatRacesTheBootout(t *testing.T) {
 	}
 	if n := strings.Count(strings.Join(*calls, "\n"), "bootstrap"); n != 3 {
 		t.Fatalf("bootstrap ran %d times, want 3:\n%s", n, strings.Join(*calls, "\n"))
+	}
+}
+
+func TestFocusScriptCompiles(t *testing.T) {
+	if _, err := exec.LookPath("osacompile"); err != nil {
+		t.Skip("osacompile not available")
+	}
+	out, err := exec.Command("osacompile", "-l", "JavaScript", "-e", focusScript, "-o", filepath.Join(t.TempDir(), "focus.scpt")).CombinedOutput()
+	if err != nil {
+		t.Fatalf("osacompile: %v: %s", err, out)
 	}
 }

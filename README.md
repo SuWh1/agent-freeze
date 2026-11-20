@@ -164,7 +164,7 @@ check.
 | `away` | `5` | minutes a session must be unused while the selected tab is unknown |
 | `retry` | `30` | minutes before a session that failed to freeze is tried again |
 | `notify` | `on` | a notification on each auto freeze |
-| `tab-thaw` | `on` | selecting a frozen session's Terminal tab thaws it (macOS) |
+| `tab-thaw` | `on` | selecting a frozen session's Terminal tab or Ghostty pane thaws it (macOS) |
 
 `auto off` does not thaw what auto mode froze; thaw those with `u` or
 `afz thaw`.
@@ -184,9 +184,10 @@ daemon, a pinned session (`p` in the TUI), or an agent with no status (only
 Claude Code reports one). Sessions running a dev server are not exempt: pin
 them if they must keep running.
 
-On macOS, auto mode also watches Apple Terminal: the session in the selected
-tab is never frozen, and a frozen session thaws as soon as you select its tab.
-The first time, macOS asks whether `afz` may control Terminal; allow it. While
+On macOS, auto mode also watches Apple Terminal and Ghostty (1.4+): the session
+in the selected tab or focused pane is never frozen, and a frozen session thaws
+as soon as you select it. The first time, macOS asks whether `afz` may control
+Terminal and Ghostty; allow it. While
 the tab cannot be read (permission denied, another app in front, Linux), a
 session must also be unused for the away time. Inside tmux, or in
 another terminal app, the selected tab cannot be matched to a session: pin

@@ -16,12 +16,17 @@ import (
 	"github.com/DataMata2/agent-freeze/internal/prog"
 )
 
-// JXA console.log writes to stderr; "?" means Terminal is not the app in front.
+// JXA console.log writes to stderr; "?" means no Terminal or Ghostty in front; Application("Ghostty") throws if not installed.
 const focusScript = `const term = Application("Terminal");
+let ghostty = null;
+try { ghostty = Application("Ghostty"); } catch (e) {}
 let last = null, lastErr = null;
 for (;;) {
   let tty = "?";
-  try { if (term.running() && term.frontmost()) tty = term.windows[0].selectedTab.tty(); }
+  try {
+    if (term.running() && term.frontmost()) tty = term.windows[0].selectedTab.tty();
+    else if (ghostty && ghostty.running() && ghostty.frontmost()) tty = ghostty.frontWindow.selectedTab.focusedTerminal.tty();
+  }
   catch (e) { tty = "?"; if (String(e) !== lastErr) { console.log(String(e)); lastErr = String(e); } }
   if (tty !== last) { console.log(tty); last = tty; }
   delay(1);
@@ -82,7 +87,7 @@ func Notify(title, body string) {
 	}
 }
 
-// WatchFocus sends the tty of Terminal's selected tab on each change, or FocusUnknown.
+// WatchFocus sends the tty of the selected tab (or Ghostty pane) on each change, or FocusUnknown.
 func WatchFocus(ctx context.Context) <-chan string {
 	ch := make(chan string)
 	go func() {
@@ -120,7 +125,7 @@ func watchFocusOnce(ctx context.Context, ch chan<- string) {
 	for lines.Scan() {
 		tty, ok := focusLine(lines.Text())
 		if !ok {
-			fmt.Fprintf(os.Stderr, "%s auto: reading the Terminal tab: %s\n", prog.Name, lines.Text())
+			fmt.Fprintf(os.Stderr, "%s auto: reading the selected tab: %s\n", prog.Name, lines.Text())
 			continue
 		}
 		select {

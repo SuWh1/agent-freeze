@@ -15,7 +15,7 @@ import (
 // FocusUnknown is the focused terminal when it cannot be read.
 const FocusUnknown = "?"
 
-// Focus is what auto mode knows about the selected Terminal tab.
+// Focus is what auto mode knows about the selected terminal tab.
 type Focus struct {
 	TTY    string               // the selected tab's terminal, or FocusUnknown
 	LeftAt map[string]time.Time // when each terminal stopped being the selected tab

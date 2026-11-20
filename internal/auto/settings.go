@@ -40,7 +40,7 @@ var Settings = []Setting{
 		Max: 1440, Inc: 5, num: func(c *Config) *float64 { return &c.RetryMinutes }},
 	{Name: "notify", Label: "notifications", Help: "a notification on each auto freeze",
 		Choices: onOff, flag: func(c *Config) *bool { return &c.Notify }},
-	{Name: "tab-thaw", Label: "thaw on tab", Help: "selecting a frozen session's Terminal tab thaws it (macOS)",
+	{Name: "tab-thaw", Label: "thaw on tab", Help: "selecting a frozen session's Terminal tab or Ghostty pane thaws it (macOS)",
 		Choices: onOff, flag: func(c *Config) *bool { return &c.TabThaw }},
 }
 
