@@ -108,6 +108,8 @@ afz list --all-procs             # also print each group's PIDs
 afz freeze --all                 # freeze every agent except you and daemons
 afz freeze 540032 my-project     # freeze by ID, key or name substring
 afz thaw --all                   # thaw everything frozen
+afz pin acme                     # auto mode never freezes this group
+afz unpin acme                   # auto mode may freeze it again
 afz status                       # frozen totals, available RAM, free swap
 afz auto on                      # auto mode, see below
 afz rename chill                 # call the command chill from now on

@@ -9,6 +9,7 @@ import (
 	"text/tabwriter"
 	"unicode"
 
+	"github.com/DataMata2/agent-freeze/internal/auto"
 	"github.com/DataMata2/agent-freeze/internal/freezer"
 	"github.com/DataMata2/agent-freeze/internal/human"
 	"github.com/DataMata2/agent-freeze/internal/prog"
@@ -71,14 +72,21 @@ func displayName(g freezer.GroupView) string {
 	return n
 }
 
-func (o *output) list(groups []freezer.GroupView, allProcs bool) {
+// listGroup is a group in list --json: its fields plus whether auto mode leaves it alone.
+type listGroup struct {
+	freezer.GroupView
+	Pinned bool `json:"pinned"`
+}
+
+func (o *output) list(groups []freezer.GroupView, cfg auto.Config, allProcs bool) {
 	if o.json {
-		if groups == nil {
-			groups = []freezer.GroupView{}
+		out := make([]listGroup, len(groups))
+		for i, g := range groups {
+			out[i] = listGroup{GroupView: g, Pinned: cfg.Pinned(g)}
 		}
 		o.writeJSON(struct {
-			Groups []freezer.GroupView `json:"groups"`
-		}{groups})
+			Groups []listGroup `json:"groups"`
+		}{out})
 		return
 	}
 	// Lay the table out on its own, then interleave the pids lines: a

@@ -102,10 +102,16 @@ func PinID(g freezer.GroupView) string {
 func (c Config) Pinned(g freezer.GroupView) bool { return slices.Contains(c.Pins, PinID(g)) }
 
 // TogglePin returns a copy of c with g pinned, or unpinned if it was.
-func (c Config) TogglePin(g freezer.GroupView) Config {
+func (c Config) TogglePin(g freezer.GroupView) Config { return c.SetPinned(g, !c.Pinned(g)) }
+
+// SetPinned returns a copy of c with g pinned or unpinned; setting the current state changes nothing.
+func (c Config) SetPinned(g freezer.GroupView, pinned bool) Config {
 	id := PinID(g)
+	if slices.Contains(c.Pins, id) == pinned {
+		return c
+	}
 	pins := slices.DeleteFunc(slices.Clone(c.Pins), func(p string) bool { return p == id })
-	if len(pins) == len(c.Pins) {
+	if pinned {
 		pins = append(pins, id)
 	}
 	c.Pins = pins

@@ -20,7 +20,7 @@ import (
 var Version = "dev"
 
 // usageHint and helpText take the command name (prog.Name) as %[1]s.
-const usageHint = "usage: %[1]s {list|freeze|thaw|status|auto|rename|version|help} [flags] [selector...]; see '%[1]s help'"
+const usageHint = "usage: %[1]s {list|freeze|thaw|pin|unpin|status|auto|rename|version|help} [flags] [selector...]; see '%[1]s help'"
 
 const helpText = `%[1]s - freeze idle coding agents to free RAM
 
@@ -30,6 +30,8 @@ commands:
   list      show agent groups (ID NAME STATE STATUS RAM SWAP PROCS CWD)
   freeze    freeze the selected groups and free their RAM
   thaw      thaw the selected groups
+  pin       pin the selected groups: auto mode never freezes them
+  unpin     unpin the selected groups
   status    show frozen totals and system memory
   auto      auto mode: 'auto on', 'auto off', 'auto set <setting> <value>', 'auto' lists them
   rename    rename this command, e.g. '%[1]s rename chill'
@@ -53,6 +55,8 @@ var validFlags = map[string][]string{
 	"list":    {"--json", "--all-procs"},
 	"freeze":  {"--json", "--all", "--include-daemons", "--yes", "--force-self"},
 	"thaw":    {"--json", "--all"},
+	"pin":     {"--json"},
+	"unpin":   {"--json"},
 	"status":  {"--json"},
 	"auto":    {"--json"},
 	"rename":  {"--json"},
@@ -63,7 +67,7 @@ var validFlags = map[string][]string{
 }
 
 // takesSelectors reports which commands accept positional arguments.
-var takesSelectors = map[string]bool{"freeze": true, "thaw": true, "rename": true, "auto": true}
+var takesSelectors = map[string]bool{"freeze": true, "thaw": true, "pin": true, "unpin": true, "rename": true, "auto": true}
 
 type opts struct {
 	json, all, includeDaemons, yes, forceSelf, allProcs bool
@@ -150,12 +154,20 @@ func dispatch(args []string, api freezer.API, o *output) error {
 		}
 		o.status(st)
 		return nil
+	case "pin", "unpin":
+		return pinCmd(cmd == "pin", sels, api, o)
 	case "list":
 		groups, err := api.List()
 		if err != nil {
 			return err
 		}
-		o.list(groups, op.allProcs)
+		var cfg auto.Config
+		if o.json {
+			if cfg, err = auto.LoadConfig(auto.DefaultPath()); err != nil {
+				fmt.Fprintf(o.stderr, "%s: auto config: %s; showing every group as unpinned\n", prog.Name, err)
+			}
+		}
+		o.list(groups, cfg, op.allProcs)
 		return nil
 	}
 	return freezeThaw(cmd == "freeze", sels, op, api, o)

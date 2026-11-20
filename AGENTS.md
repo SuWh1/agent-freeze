@@ -34,6 +34,8 @@ not a terminal behaves like `afz list` (text).
 | `afz list --json` | `{"groups":[Group...]}` |
 | `afz freeze <sel>... \| --all [--include-daemons] [--yes] --json` | `{"results":[Result...],"freed_bytes":N}` |
 | `afz thaw <sel>... \| --all --json` | `{"results":[Result...],"freed_bytes":0}` |
+| `afz pin <sel>... --json` | `{"results":[PinResult...]}` |
+| `afz unpin <sel>... --json` | `{"results":[PinResult...]}` |
 | `afz status --json` | `{"frozen":N,"freed_bytes":N,"frozen_swap_bytes":N,"mem_available_bytes":N,"swap_free_bytes":N}` |
 | `afz auto [status] \| on \| off \| set <setting> <value> --json` | `{"mode":"manual\|auto","idle_minutes":N,"interval_seconds":N,"memory_level":"warn\|critical\|off","cpu_load":N,"cpu_use_percent":N,"away_minutes":N,"retry_minutes":N,"notify":B,"tab_thaw":B,"pins":[...],"service_running":B,"last_event":Event}` |
 | `afz rename <name> --json` | `{"from":"<old path>","to":"<new path>"}` |
@@ -46,10 +48,15 @@ A selector is a group `id`, a `key`, or a case-insensitive substring of `name`.
 `daemon`, `self`, `status` (`busy` | `idle` | `shell`; omitted if unknown),
 `status_since` (optional, RFC 3339: when `status` last changed), `tty`
 (optional, the agent's terminal), `state` (`running` | `frozen` | `partial`), `frozen_at` (optional, RFC 3339),
-`freed_bytes`, `delegated`.
+`freed_bytes`, `delegated`, `pinned` (bool: auto mode never freezes it; all
+false, with a warning on stderr, when the auto config cannot be read).
 
 **Result:** `id`, `key`, `name`, `ok`, `error` (optional), `warning`
 (optional), `rss_before`, `rss_after`, `swap_after`. Sizes are bytes.
+
+**PinResult:** `id`, `key`, `name`, `ok`, `pinned` (the state after the call),
+`error` (optional). `pin` and `unpin` are idempotent: pinning a pinned group
+is `ok`. A failed pin reports `pinned: false`.
 
 **Settings** for `auto set`: `idle`, `interval`, `memory` (`warn` | `critical` |
 `off`), `cpu-load` (0 = off), `cpu-use`, `away`, `retry`, `notify` (`on` |
@@ -68,6 +75,7 @@ enough swap) also prints `{"error":"..."}`.
 
 - `0` every target succeeded (an empty target set is success)
 - `1` at least one target failed (see `ok`/`error`), or the operation failed
+  (for `pin`/`unpin`, an unreadable auto config fails every target)
 - `2` usage error: unknown command or flag, unknown or ambiguous selector
 
 ## Example: free RAM for a game

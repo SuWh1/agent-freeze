@@ -89,3 +89,17 @@ func TestLoadConfigCapsTheInterval(t *testing.T) {
 		t.Fatalf("LoadConfig = %+v, %v; want interval 3600", got, err)
 	}
 }
+
+func TestSetPinnedIsIdempotent(t *testing.T) {
+	g := group("claude-1-2", "s1")
+	c := Defaults().SetPinned(g, true)
+	if again := c.SetPinned(g, true); !reflect.DeepEqual(again.Pins, []string{"s1"}) {
+		t.Errorf("pinning twice: Pins = %v", again.Pins)
+	}
+	if c.SetPinned(g, false).Pinned(g) || !c.Pinned(g) {
+		t.Error("SetPinned(false) must unpin in the copy and leave the original pinned")
+	}
+	if Defaults().SetPinned(g, false).Pinned(g) {
+		t.Error("unpinning an unpinned group must leave it unpinned")
+	}
+}
